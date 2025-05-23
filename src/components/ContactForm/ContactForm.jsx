@@ -1,3 +1,6 @@
+import { useSelector, useDispatch } from 'react-redux';
+import { addContact } from '../../redux/contactsSlice';
+import { changeFilter } from '../../redux/filtersSlice';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useId } from 'react';
@@ -13,7 +16,10 @@ const validationSchema = Yup.object().shape({
     .required('Required'),
 });
 
-export default function ContactForm({ onAdd }) {
+export default function ContactForm() {
+  const dispatch = useDispatch();
+  const contacts = useSelector((state) => state.contacts.items);
+
   const nameId = useId();
   const phoneId = useId();
 
@@ -23,8 +29,17 @@ export default function ContactForm({ onAdd }) {
   };
 
   const handleSubmit = (values, actions) => {
-    onAdd({ id: Date.now(), ...values });
-    actions.resetForm();
+    const isExist = contacts.some(
+      (contact) => contact.name.toLowerCase() === values.name.toLowerCase(),
+    );
+
+    if (isExist) {
+      alert(`${values.name} is already in contacts.`);
+    } else {
+      dispatch(addContact({ id: Date.now(), ...values }));
+      dispatch(changeFilter(''));
+      actions.resetForm();
+    }
   };
 
   return (
